@@ -59,7 +59,7 @@ FLUSH PRIVILEGES;
       :notify  => service('apache2')
 
     a2ensite options[:domain], :require => file("/etc/apache2/sites-available/#{options[:domain]}")
-    a2enmod 'fcgid'
+    a2enmod 'fcgid', :ensure => :installed, :require => package('libapache2-mod-fcgid')
   end
 
 end
