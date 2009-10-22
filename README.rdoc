@@ -24,6 +24,11 @@ To generate values for the secret keys below, click here[https://api.wordpress.o
           :db => {:password => 'sekrit_db_password'}
         }
       )
+* If you want, you can setup HTTP Basic Auth for your Wordpress vhost like so in moonshine.yml (this could also be done via the configure method in your manifest):
+    :wordpress:
+      :apache:
+        :users:
+          :myusername: sekrit
 * Include the plugin and recipe(s) in your Moonshine manifest
     plugin :wordpress
     recipe :wordpress
