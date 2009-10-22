@@ -5,6 +5,32 @@ ServerName <%= options[:domain] %>
 DocumentRoot /srv/wordpress
 DirectoryIndex index.php
 
+<% if options[:apache] && (options[:apache][:users] || options[:apache][:allow] || options[:apache][:deny]) %>
+<Location / >
+  <% if options[:apache][:users] %>
+  authtype basic
+  authuserfile <%= options[:apache][:htpasswd] %>
+  authname "<%= options[:authname] || options[:domain] %>"
+  <% end %>
+  <Limit GET POST DELETE PUT>
+    order deny,allow
+    <% if options[:apache][:users] || options[:apache][:allow] %>
+    deny from all
+    <% end %>
+    <% options[:apache][:deny].to_a.each do |deny| %>
+    deny from <%= deny %>
+    <% end %>
+    <% options[:apache][:allow].to_a.each do |allow| %> 
+    allow from <%= allow %>
+    <% end %>
+    <% if options[:apache][:users] %>
+    require valid-user
+    <% end %>
+    Satisfy <%= options[:apache][:satisfy] || 'Any' %>
+  </Limit>
+</Location>
+<% end %>
+
 <%= options[:vhost_extra] %>
 
 ErrorLog        /var/log/apache2/<%= options[:domain] %>-error.log

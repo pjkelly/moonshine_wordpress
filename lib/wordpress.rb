@@ -12,6 +12,9 @@ module Wordpress
   def wordpress(hash = {})
     options = {
       :domain => `hostname`,
+      :apache => {
+        :htpasswd => '/srv/wordpress/htpasswd'
+      }.merge!( hash.delete(:apache) || {}),
       :db => {
         :name       => 'wordpress',
         :username   => 'wordpress',
@@ -58,8 +61,21 @@ FLUSH PRIVILEGES;
       :require => package('apache2-mpm-worker'),
       :notify  => service('apache2')
 
+    if options[:apache] && options[:apache][:users]
+      htpasswd = options[:apache][:htpasswd]
+
+      file htpasswd, :ensure => :file, :mode => '644'
+
+      options[:apache][:users].each do |user,pass|
+        exec "sudo htpasswd #{user}",
+          :require => file(htpasswd),
+          :command => "htpasswd -b #{htpasswd} #{user} #{pass}",
+          :unless  => "grep '#{user}' #{htpasswd}"
+      end
+    end
+
     a2ensite options[:domain], :require => file("/etc/apache2/sites-available/#{options[:domain]}")
-    a2enmod 'fcgid', :ensure => :installed, :require => package('libapache2-mod-fcgid')
+    a2enmod 'fcgid'
   end
 
 end
